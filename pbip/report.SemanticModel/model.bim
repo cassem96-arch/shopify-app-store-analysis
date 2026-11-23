@@ -1,0 +1,532 @@
+{
+  "name": "7f93ae25-34c2-598d-a640-27beaa2c6429",
+  "compatibilityLevel": 1567,
+  "model": {
+    "culture": "en-US",
+    "dataAccessOptions": {
+      "legacyRedirects": true,
+      "returnErrorValuesAsNull": true
+    },
+    "defaultPowerBIDataSourceVersion": "powerBI_V3",
+    "sourceQueryCulture": "en-US",
+    "tables": [
+      {
+        "name": "apps",
+        "lineageTag": "3080dc1b-87f9-561a-8b97-d54c923ed186",
+        "columns": [
+          {
+            "name": "app_id",
+            "dataType": "int64",
+            "sourceColumn": "app_id",
+            "lineageTag": "4eb5c6ea-c499-5978-a704-a4d248d25547",
+            "summarizeBy": "none",
+            "formatString": "0",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "app_name",
+            "dataType": "string",
+            "sourceColumn": "app_name",
+            "lineageTag": "b0e0ba5a-877e-58af-b8ac-a299a960bb1d",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "developer",
+            "dataType": "string",
+            "sourceColumn": "developer",
+            "lineageTag": "c8cac4e9-a613-5f3d-80ac-4d5c47dff372",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "category_name",
+            "dataType": "string",
+            "sourceColumn": "category_name",
+            "lineageTag": "69c4ecde-9649-58ec-a814-12f6c0029e26",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "launch_date",
+            "dataType": "dateTime",
+            "sourceColumn": "launch_date",
+            "lineageTag": "5443ab8a-ee38-53b1-8d69-337c20a96201",
+            "summarizeBy": "none",
+            "formatString": "Long Date",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              },
+              {
+                "name": "UnderlyingDateTimeDataType",
+                "value": "Date"
+              }
+            ]
+          },
+          {
+            "name": "has_free_plan",
+            "dataType": "string",
+            "sourceColumn": "has_free_plan",
+            "lineageTag": "9c8c84d7-d1f8-5eb8-b48f-9f4fbd6d9ed8",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "monthly_price_usd",
+            "dataType": "double",
+            "sourceColumn": "monthly_price_usd",
+            "lineageTag": "d1414349-6c0e-55fc-8120-3646b223cf7b",
+            "summarizeBy": "sum",
+            "formatString": "\\$#,0.00",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          }
+        ],
+        "partitions": [
+          {
+            "name": "apps",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = Csv.Document(File.Contents(DataFolder & \"apps.csv\"), [Delimiter = \",\", Columns = 7, Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),",
+                "    #\"Promoted Headers\" = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),",
+                "    #\"Trimmed Text\" = Table.TransformColumns(#\"Promoted Headers\", {{\"app_name\", Text.Trim, type text}, {\"developer\", Text.Trim, type text}}),",
+                "    #\"Blank Developer To Null\" = Table.ReplaceValue(#\"Trimmed Text\", \"\", null, Replacer.ReplaceValue, {\"developer\"}),",
+                "    #\"Replaced Null Developer\" = Table.ReplaceValue(#\"Blank Developer To Null\", null, \"Unknown Developer\", Replacer.ReplaceValue, {\"developer\"}),",
+                "    #\"Capitalized Each Word\" = Table.TransformColumns(#\"Replaced Null Developer\", {{\"category_name\", Text.Proper, type text}}),",
+                "    #\"Changed Type\" = Table.TransformColumnTypes(#\"Capitalized Each Word\", {{\"app_id\", Int64.Type}, {\"app_name\", type text}, {\"developer\", type text}, {\"category_name\", type text}, {\"launch_date\", type date}, {\"has_free_plan\", type text}, {\"monthly_price_usd\", type number}}, \"en-US\")",
+                "in",
+                "    #\"Changed Type\""
+              ]
+            }
+          }
+        ],
+        "measures": [
+          {
+            "name": "Total Apps",
+            "expression": "COUNTROWS ( apps )",
+            "formatString": "#,0",
+            "lineageTag": "109bb594-5991-5d24-9989-6ae43e8d14ba",
+            "displayFolder": "KPIs",
+            "description": "Number of apps in the marketplace (one row per app)."
+          },
+          {
+            "name": "Free Plan Apps %",
+            "expression": "DIVIDE ( CALCULATE ( COUNTROWS ( apps ), apps[has_free_plan] = \"Yes\" ), COUNTROWS ( apps ) )",
+            "formatString": "0.0%",
+            "lineageTag": "3b2538cd-85d3-53bd-bf69-accf1f037f5c",
+            "displayFolder": "KPIs",
+            "description": "Share of apps that offer a free plan."
+          },
+          {
+            "name": "Avg Monthly Price (Paid)",
+            "expression": "AVERAGE ( apps[monthly_price_usd] )",
+            "formatString": "\\$#,0.00",
+            "lineageTag": "53a1ed05-2167-5ed4-8396-0bc5ee54d7ae",
+            "displayFolder": "KPIs",
+            "description": "Average monthly price of apps that list a price (free-plan apps have no price)."
+          }
+        ],
+        "annotations": [
+          {
+            "name": "PBI_ResultType",
+            "value": "Table"
+          }
+        ]
+      },
+      {
+        "name": "reviews",
+        "lineageTag": "359fbde5-0aba-5b82-bf1f-545bbee8b649",
+        "columns": [
+          {
+            "name": "review_id",
+            "dataType": "int64",
+            "sourceColumn": "review_id",
+            "lineageTag": "dd213386-d151-5c0c-9258-f72caacabb55",
+            "summarizeBy": "none",
+            "formatString": "0",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "app_id",
+            "dataType": "int64",
+            "sourceColumn": "app_id",
+            "lineageTag": "98d6624c-a332-5e02-af06-46fa72c63ae8",
+            "summarizeBy": "none",
+            "formatString": "0",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "rating",
+            "dataType": "int64",
+            "sourceColumn": "rating",
+            "lineageTag": "dc6bedb2-bf88-56f6-80b4-988affe41ca6",
+            "summarizeBy": "sum",
+            "formatString": "0",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "posted_at",
+            "dataType": "dateTime",
+            "sourceColumn": "posted_at",
+            "lineageTag": "858b6d41-5d17-55ce-aea8-7878de1007eb",
+            "summarizeBy": "none",
+            "formatString": "Long Date",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              },
+              {
+                "name": "UnderlyingDateTimeDataType",
+                "value": "Date"
+              }
+            ]
+          },
+          {
+            "name": "has_developer_reply",
+            "dataType": "int64",
+            "sourceColumn": "has_developer_reply",
+            "lineageTag": "a62ae8e2-2369-5edb-a750-00696037b68f",
+            "summarizeBy": "sum",
+            "formatString": "0",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          },
+          {
+            "name": "helpful_count",
+            "dataType": "int64",
+            "sourceColumn": "helpful_count",
+            "lineageTag": "b06d4c24-0cc3-54f5-8d57-b4e225f0f7da",
+            "summarizeBy": "sum",
+            "formatString": "0",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ]
+          }
+        ],
+        "partitions": [
+          {
+            "name": "reviews",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = Csv.Document(File.Contents(DataFolder & \"reviews.csv\"), [Delimiter = \",\", Columns = 6, Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),",
+                "    #\"Promoted Headers\" = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),",
+                "    #\"Changed Type\" = Table.TransformColumnTypes(#\"Promoted Headers\", {{\"review_id\", Int64.Type}, {\"app_id\", Int64.Type}, {\"rating\", Int64.Type}, {\"posted_at\", type text}, {\"has_developer_reply\", type text}, {\"helpful_count\", Int64.Type}}),",
+                "    #\"Removed Duplicates\" = Table.Distinct(Table.Buffer(#\"Changed Type\"), {\"review_id\"}),",
+                "    #\"Kept Valid Ratings\" = Table.SelectRows(#\"Removed Duplicates\", each [rating] >= 1 and [rating] <= 5),",
+                "    #\"Changed Type with Locale\" = Table.TransformColumnTypes(#\"Kept Valid Ratings\", {{\"posted_at\", type date}}, \"en-US\"),",
+                "    #\"Replaced Yes\" = Table.ReplaceValue(#\"Changed Type with Locale\", \"Yes\", \"1\", Replacer.ReplaceValue, {\"has_developer_reply\"}),",
+                "    #\"Replaced No\" = Table.ReplaceValue(#\"Replaced Yes\", \"No\", \"0\", Replacer.ReplaceValue, {\"has_developer_reply\"}),",
+                "    #\"Changed Reply Type\" = Table.TransformColumnTypes(#\"Replaced No\", {{\"has_developer_reply\", Int64.Type}})",
+                "in",
+                "    #\"Changed Reply Type\""
+              ]
+            }
+          }
+        ],
+        "measures": [
+          {
+            "name": "Total Reviews",
+            "expression": "COUNTROWS ( reviews )",
+            "formatString": "#,0",
+            "lineageTag": "f6ef6953-7f2c-5728-ac60-44da413930ac",
+            "displayFolder": "KPIs",
+            "description": "Number of valid, de-duplicated reviews."
+          },
+          {
+            "name": "Average Rating",
+            "expression": "AVERAGE ( reviews[rating] )",
+            "formatString": "0.00",
+            "lineageTag": "9df76e70-ac28-5fbc-a1a3-d0b29b81e121",
+            "displayFolder": "KPIs",
+            "description": "Average star rating (1-5)."
+          },
+          {
+            "name": "Developer Reply %",
+            "expression": "DIVIDE ( SUM ( reviews[has_developer_reply] ), [Total Reviews] )",
+            "formatString": "0.0%",
+            "lineageTag": "ea53960b-962f-5835-8e2f-33e028ab7159",
+            "displayFolder": "KPIs",
+            "description": "Share of reviews that received a developer reply."
+          },
+          {
+            "name": "Low Rating %",
+            "expression": "DIVIDE ( CALCULATE ( [Total Reviews], reviews[rating] <= 2 ), [Total Reviews] )",
+            "formatString": "0.0%",
+            "lineageTag": "3553716b-b615-5712-ab6e-62b60ce5638c",
+            "displayFolder": "KPIs",
+            "description": "Share of 1-2 star reviews."
+          },
+          {
+            "name": "Reviews PY",
+            "expression": "CALCULATE ( [Total Reviews], SAMEPERIODLASTYEAR ( dim_date[Date] ) )",
+            "formatString": "#,0",
+            "lineageTag": "e155a583-828d-57b4-ac17-258fd3e27eb6",
+            "displayFolder": "Time Intelligence",
+            "description": "Reviews in the same period of the previous year."
+          },
+          {
+            "name": "YoY %",
+            "expression": "DIVIDE ( [Total Reviews] - [Reviews PY], [Reviews PY] )",
+            "formatString": "+0.0%;-0.0%;0.0%",
+            "lineageTag": "51c2eb52-5fb6-578a-b2cb-1e614fee1f14",
+            "displayFolder": "Time Intelligence",
+            "description": "Year-over-year growth in reviews."
+          },
+          {
+            "name": "Reviews Prev Month",
+            "expression": "CALCULATE ( [Total Reviews], DATEADD ( dim_date[Date], -1, MONTH ) )",
+            "formatString": "#,0",
+            "lineageTag": "a02ab05b-f7b5-5b94-8058-2af99d47e249",
+            "displayFolder": "Time Intelligence",
+            "description": "Reviews in the previous month (period shifted back one month)."
+          },
+          {
+            "name": "MoM %",
+            "expression": "DIVIDE ( [Total Reviews] - [Reviews Prev Month], [Reviews Prev Month] )",
+            "formatString": "+0.0%;-0.0%;0.0%",
+            "lineageTag": "7090e63e-5099-5ac9-9d85-b773bf4e0d11",
+            "displayFolder": "Time Intelligence",
+            "description": "Month-over-month growth in reviews."
+          },
+          {
+            "name": "Reviews YTD",
+            "expression": "TOTALYTD ( [Total Reviews], dim_date[Date] )",
+            "formatString": "#,0",
+            "lineageTag": "9df93eac-4c04-518f-9a44-77f03a4bc976",
+            "displayFolder": "Time Intelligence",
+            "description": "Running total of reviews from 1 January to the last date in context."
+          },
+          {
+            "name": "Reviews MTD",
+            "expression": "TOTALMTD ( [Total Reviews], dim_date[Date] )",
+            "formatString": "#,0",
+            "lineageTag": "1608c7b8-d0a6-51f5-8b67-0fbd492a83d6",
+            "displayFolder": "Time Intelligence",
+            "description": "Running total of reviews from the 1st of the month to the last date in context."
+          }
+        ],
+        "annotations": [
+          {
+            "name": "PBI_ResultType",
+            "value": "Table"
+          }
+        ]
+      },
+      {
+        "name": "dim_date",
+        "lineageTag": "8dc37906-bdd0-5c69-a9e7-4fae611dee86",
+        "dataCategory": "Time",
+        "columns": [
+          {
+            "type": "calculatedTableColumn",
+            "name": "Date",
+            "dataType": "dateTime",
+            "isNameInferred": true,
+            "isDataTypeInferred": true,
+            "sourceColumn": "[Date]",
+            "lineageTag": "6b138773-3fd4-5085-9941-c9fdf0d9181d",
+            "summarizeBy": "none",
+            "formatString": "Long Date",
+            "isKey": true
+          },
+          {
+            "type": "calculatedTableColumn",
+            "name": "Year",
+            "dataType": "int64",
+            "isNameInferred": true,
+            "isDataTypeInferred": true,
+            "sourceColumn": "[Year]",
+            "lineageTag": "ef8b3c92-4adf-56fe-a955-646388020b30",
+            "summarizeBy": "none",
+            "formatString": "0"
+          },
+          {
+            "type": "calculatedTableColumn",
+            "name": "Quarter",
+            "dataType": "string",
+            "isNameInferred": true,
+            "isDataTypeInferred": true,
+            "sourceColumn": "[Quarter]",
+            "lineageTag": "6f07f0ad-9e57-5e85-a185-e0586be6e94b",
+            "summarizeBy": "none"
+          },
+          {
+            "type": "calculatedTableColumn",
+            "name": "Month Number",
+            "dataType": "int64",
+            "isNameInferred": true,
+            "isDataTypeInferred": true,
+            "sourceColumn": "[Month Number]",
+            "lineageTag": "f2020550-d304-5e19-8017-6c2a1a7fe47d",
+            "summarizeBy": "none",
+            "formatString": "0"
+          },
+          {
+            "type": "calculatedTableColumn",
+            "name": "Month Name",
+            "dataType": "string",
+            "isNameInferred": true,
+            "isDataTypeInferred": true,
+            "sourceColumn": "[Month Name]",
+            "lineageTag": "f141ca1f-4eaa-581c-9fc0-0c0896d59a86",
+            "summarizeBy": "none",
+            "sortByColumn": "Month Number"
+          },
+          {
+            "type": "calculatedTableColumn",
+            "name": "Year-Month",
+            "dataType": "string",
+            "isNameInferred": true,
+            "isDataTypeInferred": true,
+            "sourceColumn": "[Year-Month]",
+            "lineageTag": "f10e3336-caeb-5ea8-94b0-e63f213d03f1",
+            "summarizeBy": "none"
+          },
+          {
+            "type": "calculatedTableColumn",
+            "name": "Month Start",
+            "dataType": "dateTime",
+            "isNameInferred": true,
+            "isDataTypeInferred": true,
+            "sourceColumn": "[Month Start]",
+            "lineageTag": "4b0c3278-e9d7-552e-8c18-acc3cde93c0a",
+            "summarizeBy": "none",
+            "formatString": "mmm yyyy"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "dim_date",
+            "mode": "import",
+            "source": {
+              "type": "calculated",
+              "expression": [
+                "ADDCOLUMNS (",
+                "    CALENDAR (",
+                "        DATE ( YEAR ( MIN ( reviews[posted_at] ) ), 1, 1 ),",
+                "        DATE ( YEAR ( MAX ( reviews[posted_at] ) ), 12, 31 )",
+                "    ),",
+                "    \"Year\", YEAR ( [Date] ),",
+                "    \"Quarter\", \"Q\" & QUARTER ( [Date] ),",
+                "    \"Month Number\", MONTH ( [Date] ),",
+                "    \"Month Name\", FORMAT ( [Date], \"MMM\" ),",
+                "    \"Year-Month\", FORMAT ( [Date], \"YYYY-MM\" ),",
+                "    \"Month Start\", DATE ( YEAR ( [Date] ), MONTH ( [Date] ), 1 )",
+                ")"
+              ]
+            }
+          }
+        ]
+      }
+    ],
+    "relationships": [
+      {
+        "name": "9133049e-5cd7-5fca-a097-48b9b3e4395c",
+        "fromTable": "reviews",
+        "fromColumn": "app_id",
+        "toTable": "apps",
+        "toColumn": "app_id"
+      },
+      {
+        "name": "744e966d-3563-5412-96b8-873c5d5471cd",
+        "fromTable": "reviews",
+        "fromColumn": "posted_at",
+        "toTable": "dim_date",
+        "toColumn": "Date"
+      }
+    ],
+    "expressions": [
+      {
+        "name": "DataFolder",
+        "kind": "m",
+        "lineageTag": "0a69eb33-997d-51e5-b45f-43fb8f4410c1",
+        "expression": "\"C:\\shopify-app-store-analysis\\data\\\" meta [IsParameterQuery = true, Type = \"Text\", IsParameterQueryRequired = true]",
+        "description": "Folder that contains apps.csv and reviews.csv (end with a backslash).",
+        "annotations": [
+          {
+            "name": "PBI_ResultType",
+            "value": "Text"
+          },
+          {
+            "name": "PBI_NavigationStepName",
+            "value": "Navigation"
+          }
+        ]
+      }
+    ],
+    "annotations": [
+      {
+        "name": "PBI_QueryOrder",
+        "value": "[\"DataFolder\", \"apps\", \"reviews\"]"
+      },
+      {
+        "name": "__PBI_TimeIntelligenceEnabled",
+        "value": "0"
+      },
+      {
+        "name": "PBIDesktopVersion",
+        "value": "2.140.0.0"
+      }
+    ]
+  }
+}
