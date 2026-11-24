@@ -35,8 +35,6 @@ Review activity on the Shopify App Store is growing fast, but merchant satisfact
 shopify-app-store-analysis/
 ├── README.md                 this memo and the report documentation
 ├── report.pbix               Power BI report (saved from Power BI Desktop)
-├── report.pbit               Power BI template with the same model, queries and pages
-├── pbip/                     Power BI Project (PBIP) source: model.bim (TMSL) and report.json
 ├── data/
 │   ├── apps.csv              raw app data (500 rows)
 │   └── reviews.csv           raw review data (8,240 rows)
@@ -45,8 +43,6 @@ shopify-app-store-analysis/
     ├── trend_analysis_page.png
     └── model_view.png
 ```
-
-To open the template, double-click `report.pbit`. When Power BI asks for the **DataFolder** parameter, enter the full path to the `data` folder ending with a backslash (for example `C:\Users\you\shopify-app-store-analysis\data\`). The queries then load and clean both CSV files in Import mode.
 
 ## Data model
 
@@ -158,7 +154,7 @@ In 2024, monthly reviews were above the same month of 2023 every month, by betwe
 
 ## Maintaining and extending the report
 
-- **Refreshing with new data:** replace `data/apps.csv` and `data/reviews.csv` with files that have the same columns, then click **Refresh**. `dim_date` extends automatically to cover the new review dates. If the files move, update the `DataFolder` parameter (Transform data → Manage parameters).
+- **Refreshing with new data:** replace `data/apps.csv` and `data/reviews.csv` with files that have the same columns, then click **Refresh**. `dim_date` extends automatically to cover the new review dates. If the files move, update the file paths in Power Query (Transform data → Data source settings).
 - **New dirty values:** the cleaning steps are in Power Query (Transform data). New invalid ratings, duplicate IDs, blank developers and Yes/No values are handled automatically. A new date format would need its own parsing step before *Changed Type with Locale*.
 - **New measures:** build them on the base measures (`[Total Reviews]`, `[Average Rating]`). For time comparisons, always use `dim_date[Date]` rather than `reviews[posted_at]`, so the date table marking works.
 - **Ideas for extending it:** a developer page (reply rate and rating by developer), rating by launch-year cohort using `apps[launch_date]`, and a Helpful-weighted rating using `helpful_count`.
